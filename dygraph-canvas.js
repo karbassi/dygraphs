@@ -37,15 +37,26 @@ DygraphLayout.prototype.evaluate = function() {
 
 DygraphLayout.prototype._evaluateLimits = function() {
   this.minxval = this.maxxval = null;
+
   for (var name in this.datasets) {
-    if (!this.datasets.hasOwnProperty(name)) continue;
+    if (!this.datasets.hasOwnProperty(name)) {
+      continue;
+    }
+
     var series = this.datasets[name];
     var x1 = series[0][0];
-    if (!this.minxval || x1 < this.minxval) this.minxval = x1;
+
+    if (!this.minxval || x1 < this.minxval) {
+      this.minxval = x1;
+    }
 
     var x2 = series[series.length - 1][0];
-    if (!this.maxxval || x2 > this.maxxval) this.maxxval = x2;
+
+    if (!this.maxxval || x2 > this.maxxval) {
+       this.maxxval = x2;
+    }
   }
+
   this.xrange = this.maxxval - this.minxval;
   this.xscale = (this.xrange != 0 ? 1/this.xrange : 1.0);
 
@@ -59,7 +70,10 @@ DygraphLayout.prototype._evaluateLineCharts = function() {
   // add all the rects
   this.points = new Array();
   for (var setName in this.datasets) {
-    if (!this.datasets.hasOwnProperty(setName)) continue;
+
+    if (!this.datasets.hasOwnProperty(setName)) {
+       continue;
+    }
 
     var dataset = this.datasets[setName];
     for (var j = 0; j < dataset.length; j++) {
@@ -115,13 +129,20 @@ DygraphLayout.prototype._evaluateLineTicks = function() {
  */
 DygraphLayout.prototype.evaluateWithError = function() {
   this.evaluate();
-  if (!this.options.errorBars) return;
+
+  if (!this.options.errorBars) {
+     return;
+  }
 
   // Copy over the error terms
   var i = 0; // index in this.points
   for (var setName in this.datasets) {
-    if (!this.datasets.hasOwnProperty(setName)) continue;
     var j = 0;
+
+    if (!this.datasets.hasOwnProperty(setName)) {
+       continue;
+    }
+
     var dataset = this.datasets[setName];
     for (var j = 0; j < dataset.length; j++, i++) {
       var item = dataset[j];
@@ -193,8 +214,9 @@ DygraphCanvasRenderer = function(dygraph, element, layout, options) {
   this.width = this.element.width;
 
   // --- check whether everything is ok before we return
-  if (!this.isIE && !(DygraphCanvasRenderer.isSupported(this.element)))
-      throw "Canvas is not supported.";
+  if (!this.isIE && !(DygraphCanvasRenderer.isSupported(this.element))) {
+    throw "Canvas is not supported.";
+  }
 
   // internal state
   this.xlabels = new Array();
@@ -249,17 +271,20 @@ DygraphCanvasRenderer.prototype.clear = function() {
 DygraphCanvasRenderer.isSupported = function(canvasName) {
   var canvas = null;
   try {
-    if (typeof(canvasName) == 'undefined' || canvasName == null)
+    if (typeof(canvasName) === 'undefined' || canvasName === null) {
       canvas = document.createElement("canvas");
-    else
+    } else {
       canvas = canvasName;
+    }
     var context = canvas.getContext("2d");
   }
   catch (e) {
     var ie = navigator.appVersion.match(/MSIE (\d\.\d)/);
     var opera = (navigator.userAgent.toLowerCase().indexOf("opera") != -1);
-    if ((!ie) || (ie[1] < 6) || (opera))
+
+    if ((!ie) || (ie[1] < 6) || (opera)) {
       return false;
+    }
     return true;
   }
   return true;
@@ -310,8 +335,9 @@ DygraphCanvasRenderer.prototype.render = function() {
 
 
 DygraphCanvasRenderer.prototype._renderAxis = function() {
-  if (!this.options.drawXAxis && !this.options.drawYAxis)
+  if (!this.options.drawXAxis && !this.options.drawYAxis) {
     return;
+  }
 
   var context = this.element.getContext("2d");
 
@@ -343,7 +369,11 @@ DygraphCanvasRenderer.prototype._renderAxis = function() {
     if (this.layout.yticks) {
       for (var i = 0; i < this.layout.yticks.length; i++) {
         var tick = this.layout.yticks[i];
-        if (typeof(tick) == "function") return;
+
+        if (typeof(tick) === "function") {
+           return;
+        }
+
         var x = this.area.x;
         var y = this.area.y + tick[0] * this.area.h;
         context.beginPath();
@@ -354,7 +384,9 @@ DygraphCanvasRenderer.prototype._renderAxis = function() {
 
         var label = makeDiv(tick[1]);
         var top = (y - this.options.axisLabelFontSize / 2);
-        if (top < 0) top = 0;
+        if (top < 0) {
+           top = 0;
+        }
 
         if (top + this.options.axisLabelFontSize + 3 > this.height) {
           label.style.bottom = "0px";
@@ -395,6 +427,11 @@ DygraphCanvasRenderer.prototype._renderAxis = function() {
 
         var x = this.area.x + tick[0] * this.area.w;
         var y = this.area.y + this.area.h;
+        // TODO (karbassi): dataset is never assigned.
+        if (typeof(dataset) === "function") {
+           return;
+        }
+
         context.beginPath();
         context.moveTo(x, y);
         context.lineTo(x, y + this.options.axisTickSize);
@@ -482,7 +519,7 @@ DygraphCanvasRenderer.prototype._renderLineChart = function() {
       for (var j = 0; j < this.layout.points.length; j++) {
         var point = this.layout.points[j];
         count++;
-        if (point.name == setName) {
+        if (point.name === setName) {
           if (!point.y || isNaN(point.y)) {
             prevX = -1;
             continue;

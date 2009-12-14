@@ -267,7 +267,9 @@ Dygraph.prototype.rollPeriod = function() {
 
 Dygraph.addEvent = function(el, evt, fn) {
   var normed_fn = function(e) {
-    if (!e) var e = window.event;
+    if (!e) {
+       var e = window.event;
+    }
     fn(e);
   };
   if (window.addEventListener) {  // Mozilla, Netscape, Firefox
@@ -410,9 +412,9 @@ Dygraph.findPosX = function(obj) {
       curleft += obj.offsetLeft;
       obj = obj.offsetParent;
     }
-  }
-  else if (obj.x)
+  } else if (obj.x) {
     curleft += obj.x;
+  }
   return curleft;
 };
                    
@@ -423,9 +425,9 @@ Dygraph.findPosY = function(obj) {
       curtop += obj.offsetTop;
       obj = obj.offsetParent;
     }
-  }
-  else if (obj.y)
+  } else if (obj.y) {
     curtop += obj.y;
+  }
   return curtop;
 };
 
@@ -608,7 +610,9 @@ Dygraph.prototype.createDragInterface_ = function() {
 
   // Double-clicking zooms back out
   Dygraph.addEvent(this.hidden_, 'dblclick', function(event) {
-    if (self.dateWindow_ == null) return;
+    if (self.dateWindow_ === null) {
+      return;
+    }
     self.dateWindow_ = null;
     self.drawGraph_(self.rawData_);
     var minDate = self.rawData_[0][0];
@@ -665,12 +669,20 @@ Dygraph.prototype.doZoom_ = function(lowX, highX) {
   for (var i = 0; i < points.length; i++) {
     var cx = points[i].canvasx;
     var x = points[i].xval;
-    if (cx < lowX  && (minDate == null || x > minDate)) minDate = x;
-    if (cx > highX && (maxDate == null || x < maxDate)) maxDate = x;
+    if (cx < lowX  && (minDate === null || x > minDate)) {
+      minDate = x;
+    }
+    if (cx > highX && (maxDate === null || x < maxDate)) {
+      maxDate = x;
+    }
   }
   // Use the extremes if either is missing
-  if (minDate == null) minDate = points[0].xval;
-  if (maxDate == null) maxDate = points[points.length-1].xval;
+  if (minDate === null) {
+    minDate = points[0].xval;
+  }
+  if (maxDate === null) {
+    maxDate = points[points.length-1].xval;
+  }
 
   this.dateWindow_ = [minDate, maxDate];
   this.drawGraph_(this.rawData_);
@@ -699,14 +711,21 @@ Dygraph.prototype.mouseMove_ = function(event) {
   var idx = -1;
   for (var i = 0; i < points.length; i++) {
     var dist = Math.abs(points[i].canvasx - canvasx);
-    if (dist > minDist) break;
+    if (dist > minDist) {
+      break;
+    }
     minDist = dist;
     idx = i;
   }
-  if (idx >= 0) lastx = points[idx].xval;
+
+  if (idx >= 0) {
+    lastx = points[idx].xval;
+  }
+
   // Check that you can really highlight the last day's data
-  if (canvasx > points[points.length-1].canvasx)
+  if (canvasx > points[points.length-1].canvasx) {
     lastx = points[points.length-1].xval;
+  }
 
   // Extract the points we've selected
   this.selPoints_ = [];
@@ -737,7 +756,9 @@ Dygraph.prototype.mouseMove_ = function(event) {
     var replace = this.attr_('xValueFormatter')(lastx, this) + ":";
     var clen = this.colors_.length;
     for (var i = 0; i < this.selPoints_.length; i++) {
-      if (!isOK(this.selPoints_[i].canvasy)) continue;
+      if (!isOK(this.selPoints_[i].canvasy)) {
+        continue;
+      }
       if (this.attr_("labelsSeparateLines")) {
         replace += "<br/>";
       }
@@ -755,7 +776,9 @@ Dygraph.prototype.mouseMove_ = function(event) {
     // Draw colored circles over the center of each selected point
     ctx.save()
     for (var i = 0; i < this.selPoints_.length; i++) {
-      if (!isOK(this.selPoints_[i%clen].canvasy)) continue;
+      if (!isOK(this.selPoints_[i%clen].canvasy)) {
+        continue;
+      }
       ctx.beginPath();
       ctx.fillStyle = this.colors_[i%clen];
       ctx.arc(canvasx, this.selPoints_[i%clen].canvasy, circleSize,
@@ -824,7 +847,9 @@ Dygraph.dateString_ = function(date, self) {
 
   var ret = "";
   var frac = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
-  if (frac) ret = " " + self.hmsString_(date);
+  if (frac) {
+    ret = " " + self.hmsString_(date);
+  }
 
   return year + "/" + month + "/" + day + ret;
 };
@@ -979,11 +1004,15 @@ Dygraph.prototype.GetXAxis = function(start_time, end_time, granularity) {
     var end_year   = new Date(end_time).getFullYear();
     var zeropad = Dygraph.zeropad;
     for (var i = start_year; i <= end_year; i++) {
-      if (i % year_mod != 0) continue;
+      if (i % year_mod !== 0) {
+        continue;
+      }
       for (var j = 0; j < months.length; j++) {
         var date_str = i + "/" + zeropad(1 + months[j]) + "/01";
         var t = Date.parse(date_str);
-        if (t < start_time || t > end_time) continue;
+        if (t < start_time || t > end_time) {
+          continue;
+        }
         ticks.push({ v:t, label: new Date(t).strftime('%b %y') });
       }
     }
@@ -1042,9 +1071,13 @@ Dygraph.numericTicks = function(minV, maxV, self) {
       nTicks = (high_val - low_val) / scale;
       var spacing = self.height_ / nTicks;
       // wish I could break out of both loops at once...
-      if (spacing > pixelsPerTick) break;
+      if (spacing > pixelsPerTick) {
+        break;
+      }
     }
-    if (spacing > pixelsPerTick) break;
+    if (spacing > pixelsPerTick) {
+      break;
+    }
   }
 
   // Construct labels for the ticks
@@ -1093,12 +1126,18 @@ Dygraph.prototype.extremeValues_ = function(series) {
     // With custom bars, maxY is the max of the high values.
     for (var j = 0; j < series.length; j++) {
       var y = series[j][1][0];
-      if (!y) continue;
+      if (!y) {
+        continue;
+      }
       var low = y - series[j][1][1];
       var high = y + series[j][1][2];
-      if (low > y) low = y;    // this can happen with custom bars,
-      if (high < y) high = y;  // e.g. in tests/custom-bars.html
-      if (maxY == null || high > maxY) {
+      if (low > y) {
+        low = y;    // this can happen with custom bars,
+      }
+      if (high < y) {
+        high = y;  // e.g. in tests/custom-bars.html
+      }
+      if (maxY === null || high > maxY) {
         maxY = high;
       }
       if (minY == null || low < minY) {
@@ -1108,8 +1147,10 @@ Dygraph.prototype.extremeValues_ = function(series) {
   } else {
     for (var j = 0; j < series.length; j++) {
       var y = series[j][1];
-      if (!y) continue;
       if (maxY == null || y > maxY) {
+      if (!y) {
+        continue;
+      }
         maxY = y;
       }
       if (minY == null || y < minY) {
@@ -1161,14 +1202,19 @@ Dygraph.prototype.drawGraph_ = function(data) {
     var extremes = this.extremeValues_(series);
     var thisMinY = extremes[0];
     var thisMaxY = extremes[1];
-    if (!minY || thisMinY < minY) minY = thisMinY;
-    if (!maxY || thisMaxY > maxY) maxY = thisMaxY;
+    if (!minY || thisMinY < minY) {
+      minY = thisMinY;
+    }
+    if (!maxY || thisMaxY > maxY) {
+      maxY = thisMaxY;
+    }
 
     if (bars) {
       var vals = [];
-      for (var j=0; j<series.length; j++)
+      for (var j=0; j<series.length; j++) {
         vals[j] = [series[j][0],
                    series[j][1][0], series[j][1][1], series[j][1][2]];
+      }
       this.layout_.addDataset(this.attr_("labels")[i], vals);
     } else {
       this.layout_.addDataset(this.attr_("labels")[i], series);
@@ -1186,12 +1232,20 @@ Dygraph.prototype.drawGraph_ = function(data) {
     var minAxisY = minY - 0.1 * span;
 
     // Try to include zero and make it minAxisY (or maxAxisY) if it makes sense.
-    if (minAxisY < 0 && minY >= 0) minAxisY = 0;
-    if (maxAxisY > 0 && maxY <= 0) maxAxisY = 0;
+    if (minAxisY < 0 && minY >= 0) {
+      minAxisY = 0;
+    }
+    if (maxAxisY > 0 && maxY <= 0) {
+      maxAxisY = 0;
+    }
 
     if (this.attr_("includeZero")) {
-      if (maxY < 0) maxAxisY = 0;
-      if (minY > 0) minAxisY = 0;
+      if (maxY < 0) {
+        maxAxisY = 0;
+      }
+      if (minY > 0) {
+        minAxisY = 0;
+      }
     }
 
     this.addYTicks_(minAxisY, maxAxisY);
@@ -1219,8 +1273,9 @@ Dygraph.prototype.drawGraph_ = function(data) {
  * @param {Number} rollPeriod The number of days over which to average the data
  */
 Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
-  if (originalData.length < 2)
+  if (originalData.length < 2) {
     return originalData;
+  }
   var rollPeriod = Math.min(rollPeriod, originalData.length - 1);
   var rollingData = [];
   var sigma = this.attr_("sigma");
@@ -1305,7 +1360,9 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
         var num_ok = 0;
         for (var j = Math.max(0, i - rollPeriod + 1); j < i + 1; j++) {
           var y = originalData[j][1];
-          if (y == null || isNaN(y)) continue;
+          if (y === null || isNaN(y)) {
+            continue;
+          }
           num_ok++;
           sum += originalData[j][1];
         }
@@ -1323,7 +1380,9 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
         var num_ok = 0;
         for (var j = Math.max(0, i - rollPeriod + 1); j < i + 1; j++) {
           var y = originalData[j][1][0];
-          if (y == null || isNaN(y)) continue;
+          if (y === null || isNaN(y)) {
+            continue;
+          }
           num_ok++;
           sum += originalData[j][1][0];
           variance += Math.pow(originalData[j][1][1], 2);
@@ -1442,10 +1501,16 @@ Dygraph.prototype.parseCSV_ = function(data) {
   var expectedCols = this.attr_("labels").length;
   for (var i = start; i < lines.length; i++) {
     var line = lines[i];
-    if (line.length == 0) continue;  // skip blank lines
-    if (line[0] == '#') continue;    // skip comment lines
+    if (line.length === 0) {
+      continue;  // skip blank lines
+    }
+    if (line[0] === '#') {
+      continue;    // skip comment lines
+    }
     var inFields = line.split(delim);
-    if (inFields.length < 2) continue;
+    if (inFields.length < 2) {
+      continue;
+    }
 
     var fields = [];
     if (!defaultParserSet) {
@@ -1464,9 +1529,10 @@ Dygraph.prototype.parseCSV_ = function(data) {
       }
     } else if (this.attr_("errorBars")) {
       // If there are error bars, values are (value, stddev) pairs
-      for (var j = 1; j < inFields.length; j += 2)
+      for (var j = 1; j < inFields.length; j += 2) {
         fields[(j + 1) / 2] = [parseFloat(inFields[j]),
                                parseFloat(inFields[j + 1])];
+      }
     } else if (this.attr_("customBars")) {
       // Bars are a low;center;high tuple
       for (var j = 1; j < inFields.length; j++) {
@@ -1564,7 +1630,9 @@ Dygraph.prototype.parseDataTable_ = function(data) {
   var labels = [];
   for (var i = 0; i < cols; i++) {
     labels.push(data.getColumnLabel(i));
-    if (i != 0 && this.attr_("errorBars")) i += 1;
+    if (i !== 0 && this.attr_("errorBars")) {
+      i += 1;
+    }
   }
   this.attrs_.labels = labels;
   cols = labels.length;
@@ -1587,8 +1655,10 @@ Dygraph.prototype.parseDataTable_ = function(data) {
   var ret = [];
   for (var i = 0; i < rows; i++) {
     var row = [];
-    if (!data.getValue(i, 0)) continue;
     if (indepType == 'date') {
+    if (!data.getValue(i, 0)) {
+      continue;
+    }
       row.push(data.getValue(i, 0).getTime());
     } else {
       row.push(data.getValue(i, 0));
