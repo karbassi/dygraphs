@@ -930,16 +930,16 @@ Dygraph.DECADAL = 14;
 Dygraph.NUM_GRANULARITIES = 15;
 
 Dygraph.SHORT_SPACINGS = [];
-Dygraph.SHORT_SPACINGS[Dygraph.SECONDLY]        = 1000 * 1;
-Dygraph.SHORT_SPACINGS[Dygraph.TEN_SECONDLY]    = 1000 * 10;
-Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_SECONDLY] = 1000 * 30;
-Dygraph.SHORT_SPACINGS[Dygraph.MINUTELY]        = 1000 * 60;
-Dygraph.SHORT_SPACINGS[Dygraph.TEN_MINUTELY]    = 1000 * 60 * 10;
-Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_MINUTELY] = 1000 * 60 * 30;
-Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 1000 * 3600;
-Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 1000 * 3600 * 6;
-Dygraph.SHORT_SPACINGS[Dygraph.DAILY]           = 1000 * 86400;
-Dygraph.SHORT_SPACINGS[Dygraph.WEEKLY]          = 1000 * 604800;
+Dygraph.SHORT_SPACINGS[Dygraph.SECONDLY]        = 1E3; // 1000 * 1
+Dygraph.SHORT_SPACINGS[Dygraph.TEN_SECONDLY]    = 1E4; // 1000 * 10
+Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_SECONDLY] = 3E4; // 1000 * 30
+Dygraph.SHORT_SPACINGS[Dygraph.MINUTELY]        = 6E4; // 1000 * 60
+Dygraph.SHORT_SPACINGS[Dygraph.TEN_MINUTELY]    = 6E5; // 1000 * 60 * 10
+Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_MINUTELY] = 18E5; // 1000 * 60 * 30
+Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 36E5; // 1000 * 60 * 30
+Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 216E5; // 1000 * 3600 * 6
+Dygraph.SHORT_SPACINGS[Dygraph.DAILY]           = 864E5; // 1000 * 86400
+Dygraph.SHORT_SPACINGS[Dygraph.WEEKLY]          = 6048E5; // 1000 * 604800
 
 // NumXTicks()
 //
@@ -959,7 +959,7 @@ Dygraph.prototype.NumXTicks = function(start_time, end_time, granularity) {
     if (granularity == Dygraph.ANNUAL) num_months = 1;
     if (granularity == Dygraph.DECADAL) { num_months = 1; year_mod = 10; }
 
-    var msInYear = 365.2524 * 24 * 3600 * 1000;
+    var msInYear = 31557807360; // 365.2524 * 24 * 3600 * 1000
     var num_years = 1.0 * (end_time - start_time) / msInYear;
     return Math.floor(0.5 + 1.0 * num_years * num_months / year_mod);
   }
@@ -987,7 +987,7 @@ Dygraph.prototype.GetXAxis = function(start_time, end_time, granularity) {
       var frac = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
       if (frac === 0 || granularity >= Dygraph.DAILY) {
         // the extra hour covers DST problems.
-        ticks.push({ v:t, label: new Date(t + 3600*1000).strftime(format) });
+        ticks.push({ v:t, label: new Date(t + 36E5).strftime(format) });
       } else {
         ticks.push({ v:t, label: this.hmsString_(t) });
       }
@@ -1098,7 +1098,7 @@ Dygraph.numericTicks = function(minV, maxV, self) {
     var tickV = low_val + i * scale;
     var label = self.round_(tickV, 2);
     if (self.attr_("labelsKMB")) {
-      var k = 1000;
+      var k = 1E3;
       if (tickV >= k*k*k) {
         label = self.round_(tickV/(k*k*k), 1) + "B";
       } else if (tickV >= k*k) {
