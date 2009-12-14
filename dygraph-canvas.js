@@ -4,7 +4,7 @@
 /**
  * @fileoverview Based on PlotKit, but modified to meet the needs of dygraphs.
  * In particular, support for:
- * - grid overlays 
+ * - grid overlays
  * - error bars
  * - dygraphs attribute system
  */
@@ -58,12 +58,12 @@ DygraphLayout.prototype._evaluateLimits = function() {
   }
 
   this.xrange = this.maxxval - this.minxval;
-  this.xscale = (this.xrange != 0 ? 1/this.xrange : 1.0);
+  this.xscale = (this.xrange !== 0 ? 1/this.xrange : 1.0);
 
   this.minyval = this.options.yAxis[0];
   this.maxyval = this.options.yAxis[1];
   this.yrange = this.maxyval - this.minyval;
-  this.yscale = (this.yrange != 0 ? 1/this.yrange : 1.0);
+  this.yscale = (this.yrange !== 0 ? 1/this.yrange : 1.0);
 };
 
 DygraphLayout.prototype._evaluateLineCharts = function() {
@@ -149,8 +149,8 @@ DygraphLayout.prototype.evaluateWithError = function() {
       var xv = parseFloat(item[0]);
       var yv = parseFloat(item[1]);
 
-      if (xv == this.points[i].xval &&
-          yv == this.points[i].yval) {
+      if (xv === this.points[i].xval &&
+          yv === this.points[i].yval) {
         this.points[i].errorMinus = parseFloat(item[2]);
         this.points[i].errorPlus = parseFloat(item[3]);
       }
@@ -280,7 +280,7 @@ DygraphCanvasRenderer.isSupported = function(canvasName) {
   }
   catch (e) {
     var ie = navigator.appVersion.match(/MSIE (\d\.\d)/);
-    var opera = (navigator.userAgent.toLowerCase().indexOf("opera") != -1);
+    var opera = (navigator.userAgent.toLowerCase().indexOf("opera") !== -1);
 
     if ((!ie) || (ie[1] < 6) || (opera)) {
       return false;
@@ -557,14 +557,14 @@ DygraphCanvasRenderer.prototype._renderLineChart = function() {
     var points = this.layout.points;
     for (var j = 0; j < points.length; j++) {
       var point = points[j];
-      if (point.name == setName) {
+      if (point.name === setName) {
         if (!isOK(point.canvasy)) {
           // this will make us move to the next point, not draw a line to it.
           prevX = prevY = null;
         } else {
           // A point is "isolated" if it is non-null but both the previous
           // and next points are null.
-          var isIsolated = (!prevX && (j == points.length - 1 ||
+          var isIsolated = (!prevX && (j === points.length - 1 ||
                                        !isOK(points[j+1].canvasy)));
 
           if (!prevX) {

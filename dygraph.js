@@ -52,7 +52,7 @@
  */
 Dygraph = function(div, data, opts) {
   if (arguments.length > 0) {
-    if (arguments.length == 4) {
+    if (arguments.length === 4) {
       // Old versions of dygraphs took in the series labels as a constructor
       // parameter. This doesn't make sense anymore, but it's easy to continue
       // to support this usage.
@@ -124,9 +124,13 @@ Dygraph.prototype.__old_init__ = function(div, file, labels, attrs) {
   // Labels is no longer a constructor parameter, since it's typically set
   // directly from the data source. It also conains a name for the x-axis,
   // which the previous constructor form did not.
-  if (labels != null) {
+  if (labels !== null) {
     var new_labels = ["Date"];
-    for (var i = 0; i < labels.length; i++) new_labels.push(labels[i]);
+
+    for (var i = 0; i < labels.length; i++) {
+       new_labels.push(labels[i]);
+    }
+
     Dygraph.update(attrs, { 'labels': new_labels });
   }
   this.__init__(div, file, attrs);
@@ -143,7 +147,9 @@ Dygraph.prototype.__old_init__ = function(div, file, labels, attrs) {
  */
 Dygraph.prototype.__init__ = function(div, file, attrs) {
   // Support two-argument constructor
-  if (attrs == null) { attrs = {}; }
+  if (!attrs || attrs === undefined || attrs === null) {
+    attrs = {};
+  }
 
   // Copy the important bits into the object
   // TODO(danvk): most of these should just stay in the attrs_ dictionary.
@@ -161,19 +167,21 @@ Dygraph.prototype.__init__ = function(div, file, attrs) {
   div.innerHTML = "";
 
   // If the div isn't already sized then give it a default size.
-  if (div.style.width == '') {
+  if (div.style.width === '') {
     div.style.width = Dygraph.DEFAULT_WIDTH + "px";
   }
-  if (div.style.height == '') {
+
+  if (div.style.height === '') {
     div.style.height = Dygraph.DEFAULT_HEIGHT + "px";
   }
+
   this.width_ = parseInt(div.style.width, 10);
   this.height_ = parseInt(div.style.height, 10);
 
   // Dygraphs has many options, some of which interact with one another.
   // To keep track of everything, we maintain two sets of options:
   //
-  //  this.user_attrs_   only options explicitly set by the user. 
+  //  this.user_attrs_   only options explicitly set by the user.
   //  this.attrs_        defaults, options derived from user_attrs_, data.
   //
   // Options are then accessed this.attr_('attr'), which first looks at
@@ -186,7 +194,7 @@ Dygraph.prototype.__init__ = function(div, file, attrs) {
   Dygraph.update(this.attrs_, Dygraph.DEFAULT_ATTRS);
 
   // Make a note of whether labels will be pulled from the CSV file.
-  this.labelsFromCSV_ = (this.attr_("labels") == null);
+  this.labelsFromCSV_ = (this.attr_("labels") === null);
 
   // Create the containing DIV and other interactive elements
   this.createInterface_();
@@ -219,9 +227,9 @@ Dygraph.prototype.__init__ = function(div, file, attrs) {
 };
 
 Dygraph.prototype.attr_ = function(name) {
-  if (typeof(this.user_attrs_[name]) != 'undefined') {
+  if (typeof(this.user_attrs_[name]) !== 'undefined') {
     return this.user_attrs_[name];
-  } else if (typeof(this.attrs_[name]) != 'undefined') {
+  } else if (typeof(this.attrs_[name]) !== 'undefined') {
     return this.attrs_[name];
   } else {
     return null;
@@ -230,7 +238,7 @@ Dygraph.prototype.attr_ = function(name) {
 
 // TODO(danvk): any way I can get the line numbers to be this.warn call?
 Dygraph.prototype.log = function(severity, message) {
-  if (typeof(console) != 'undefined') {
+  if (typeof(console) !== 'undefined') {
     switch (severity) {
       case Dygraph.DEBUG:
         console.debug('dygraphs: ' + message);
@@ -588,8 +596,8 @@ Dygraph.prototype.createDragInterface_ = function() {
       var regionHeight = Math.abs(dragEndY - dragStartY);
 
       if (regionWidth < 2 && regionHeight < 2 &&
-          self.attr_('clickCallback') != null &&
-          self.lastx_ != undefined) {
+          self.attr_('clickCallback') !== null &&
+          self.lastx_ !== undefined) {
         // TODO(danvk): pass along more info about the points.
         self.attr_('clickCallback')(event, self.lastx_, self.selPoints_);
       }
@@ -730,7 +738,7 @@ Dygraph.prototype.mouseMove_ = function(event) {
   // Extract the points we've selected
   this.selPoints_ = [];
   for (var i = 0; i < points.length; i++) {
-    if (points[i].xval == lastx) {
+    if (points[i].xval === lastx) {
       this.selPoints_.push(points[i]);
     }
   }
@@ -973,7 +981,7 @@ Dygraph.prototype.GetXAxis = function(start_time, end_time, granularity) {
     for (var t = start_time; t <= end_time; t += spacing) {
       var d = new Date(t);
       var frac = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
-      if (frac == 0 || granularity >= Dygraph.DAILY) {
+      if (frac === 0 || granularity >= Dygraph.DAILY) {
         // the extra hour covers DST problems.
         ticks.push({ v:t, label: new Date(t + 3600*1000).strftime(format) });
       } else {
@@ -982,7 +990,7 @@ Dygraph.prototype.GetXAxis = function(start_time, end_time, granularity) {
     }
   } else {
     // Display a tick mark on the first of a set of months of each year.
-    // Years get a tick mark iff y % year_mod == 0. This is useful for
+    // Years get a tick mark iff y % year_mod === 0. This is useful for
     // displaying a tick mark once every 10 years, say, on long time scales.
     var months;
     var year_mod = 1;  // e.g. to only print one point every 10 years.
@@ -1140,20 +1148,20 @@ Dygraph.prototype.extremeValues_ = function(series) {
       if (maxY === null || high > maxY) {
         maxY = high;
       }
-      if (minY == null || low < minY) {
+      if (minY === null || low < minY) {
         minY = low;
       }
     }
   } else {
     for (var j = 0; j < series.length; j++) {
       var y = series[j][1];
-      if (maxY == null || y > maxY) {
       if (!y) {
         continue;
       }
+      if (maxY === null || y > maxY) {
         maxY = y;
       }
-      if (minY == null || y < minY) {
+      if (minY === null || y < minY) {
         minY = y;
       }
     }
@@ -1223,7 +1231,7 @@ Dygraph.prototype.drawGraph_ = function(data) {
 
   // Use some heuristics to come up with a good maxY value, unless it's been
   // set explicitly by the user.
-  if (this.valueRange_ != null) {
+  if (this.valueRange_ !== null) {
     this.addYTicks_(this.valueRange_[0], this.valueRange_[1]);
   } else {
     // Add some padding and round up to an integer to be human-friendly.
@@ -1327,7 +1335,7 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
       var y = data[1];
       rollingData[i] = [originalData[i][0], [y, y - data[0], data[2] - y]];
 
-      if (y != null && !isNaN(y)) {
+      if (y !== null && !isNaN(y)) {
         low += data[0];
         mid += y;
         high += data[2];
@@ -1335,7 +1343,7 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
       }
       if (i - rollPeriod >= 0) {
         var prev = originalData[i - rollPeriod];
-        if (prev[1][1] != null && !isNaN(prev[1][1])) {
+        if (prev[1][1] !== null && !isNaN(prev[1][1])) {
           low -= prev[1][0];
           mid -= prev[1][1];
           high -= prev[1][2];
@@ -1351,7 +1359,7 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
     // there is not enough data to roll over the full number of days
     var num_init_points = Math.min(rollPeriod - 1, originalData.length - 2);
     if (!this.attr_("errorBars")){
-      if (rollPeriod == 1) {
+      if (rollPeriod === 1) {
         return originalData;
       }
 
@@ -1412,13 +1420,13 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
 Dygraph.dateParser = function(dateStr, self) {
   var dateStrSlashed;
   var d;
-  if (dateStr.length == 10 && dateStr.search("-") != -1) {  // e.g. '2009-07-12'
+  if (dateStr.length === 10 && dateStr.search("-") !== -1) {  // e.g. '2009-07-12'
     dateStrSlashed = dateStr.replace("-", "/", "g");
-    while (dateStrSlashed.search("-") != -1) {
+    while (dateStrSlashed.search("-") !== -1) {
       dateStrSlashed = dateStrSlashed.replace("-", "/");
     }
     d = Date.parse(dateStrSlashed);
-  } else if (dateStr.length == 8) {  // e.g. '20090712'
+  } else if (dateStr.length === 8) {  // e.g. '20090712'
     // TODO(danvk): remove support for this format. It's confusing.
     dateStrSlashed = dateStr.substr(0,4) + "/" + dateStr.substr(4,2)
                        + "/" + dateStr.substr(6,2);
@@ -1447,7 +1455,7 @@ Dygraph.prototype.detectTypeFromString_ = function(str) {
       str.indexOf('/') >= 0 ||
       isNaN(parseFloat(str))) {
     isDate = true;
-  } else if (str.length == 8 && str > '19700101' && str < '20371231') {
+  } else if (str.length === 8 && str > '19700101' && str < '20371231') {
     // TODO(danvk): remove support for this format.
     isDate = true;
   }
@@ -1486,7 +1494,7 @@ Dygraph.prototype.parseCSV_ = function(data) {
 
   // Use the default delimiter or fall back to a tab if that makes sense.
   var delim = this.attr_('delimiter');
-  if (lines[0].indexOf(delim) == -1 && lines[0].indexOf('\t') >= 0) {
+  if (lines[0].indexOf(delim) === -1 && lines[0].indexOf('\t') >= 0) {
     delim = '\t';
   }
 
@@ -1549,7 +1557,7 @@ Dygraph.prototype.parseCSV_ = function(data) {
     }
     ret.push(fields);
 
-    if (fields.length != expectedCols) {
+    if (fields.length !== expectedCols) {
       this.error("Number of columns in line " + i + " (" + fields.length +
                  ") does not agree with number of labels (" + expectedCols +
                  ") " + line);
@@ -1567,16 +1575,16 @@ Dygraph.prototype.parseCSV_ = function(data) {
  */
 Dygraph.prototype.parseArray_ = function(data) {
   // Peek at the first x value to see if it's numeric.
-  if (data.length == 0) {
+  if (data.length === 0) {
     this.error("Can't plot empty data set");
     return null;
   }
-  if (data[0].length == 0) {
+  if (data[0].length === 0) {
     this.error("Data set cannot contain an empty row");
     return null;
   }
 
-  if (this.attr_("labels") == null) {
+  if (this.attr_("labels") === null) {
     this.warn("Using default labels. Set labels explicitly via 'labels' " +
               "in the options parameter");
     this.attrs_.labels = [ "X" ];
@@ -1593,12 +1601,12 @@ Dygraph.prototype.parseArray_ = function(data) {
     // Assume they're all dates.
     var parsedData = Dygraph.clone(data);
     for (var i = 0; i < data.length; i++) {
-      if (parsedData[i].length == 0) {
+      if (parsedData[i].length === 0) {
         this.error("Row " << (1 + i) << " of data is empty");
         return null;
       }
-      if (parsedData[i][0] == null
-          || typeof(parsedData[i][0].getTime) != 'function') {
+      if (parsedData[i][0] === null
+          || typeof(parsedData[i][0].getTime) !== 'function') {
         this.error("x value in row " << (1 + i) << " is not a Date");
         return null;
       }
@@ -1638,11 +1646,11 @@ Dygraph.prototype.parseDataTable_ = function(data) {
   cols = labels.length;
 
   var indepType = data.getColumnType(0);
-  if (indepType == 'date') {
+  if (indepType === 'date') {
     this.attrs_.xValueFormatter = Dygraph.dateString_;
     this.attrs_.xValueParser = Dygraph.dateParser;
     this.attrs_.xTicker = Dygraph.dateTicker;
-  } else if (indepType == 'number') {
+  } else if (indepType === 'number') {
     this.attrs_.xValueFormatter = function(x) { return x; };
     this.attrs_.xValueParser = function(x) { return parseFloat(x); };
     this.attrs_.xTicker = Dygraph.numericTicks;
@@ -1655,10 +1663,10 @@ Dygraph.prototype.parseDataTable_ = function(data) {
   var ret = [];
   for (var i = 0; i < rows; i++) {
     var row = [];
-    if (indepType == 'date') {
     if (!data.getValue(i, 0)) {
       continue;
     }
+    if (indepType === 'date') {
       row.push(data.getValue(i, 0).getTime());
     } else {
       row.push(data.getValue(i, 0));
@@ -1679,7 +1687,7 @@ Dygraph.prototype.parseDataTable_ = function(data) {
 
 // These functions are all based on MochiKit.
 Dygraph.update = function (self, o) {
-  if (typeof(o) != 'undefined' && o !== null) {
+  if (typeof(o) !== 'undefined' && o !== null) {
     for (var k in o) {
       if (o.hasOwnProperty(k)) {
         self[k] = o[k];
@@ -1692,10 +1700,10 @@ Dygraph.update = function (self, o) {
 Dygraph.isArrayLike = function (o) {
   var typ = typeof(o);
   if (
-      (typ != 'object' && !(typ == 'function' && 
-        typeof(o.item) == 'function')) ||
+      (typ !== 'object' && !(typ === 'function' &&
+        typeof(o.item) === 'function')) ||
       o === null ||
-      typeof(o.length) != 'number' ||
+      typeof(o.length) !== 'number' ||
       o.nodeType === 3
      ) {
     return false;
@@ -1704,8 +1712,8 @@ Dygraph.isArrayLike = function (o) {
 };
 
 Dygraph.isDateLike = function (o) {
-  if (typeof(o) != "object" || o === null ||
-      typeof(o.getTime) != 'function') {
+  if (typeof(o) !== "object" || o === null ||
+      typeof(o.getTime) !== 'function') {
     return false;
   }
   return true;
@@ -1731,18 +1739,18 @@ Dygraph.clone = function(o) {
  * @private
  */
 Dygraph.prototype.start_ = function() {
-  if (typeof this.file_ == 'function') {
+  if (typeof this.file_ === 'function') {
     // CSV string. Pretend we got it via XHR.
     this.loadedEvent_(this.file_());
   } else if (Dygraph.isArrayLike(this.file_)) {
     this.rawData_ = this.parseArray_(this.file_);
     this.drawGraph_(this.rawData_);
-  } else if (typeof this.file_ == 'object' &&
-             typeof this.file_.getColumnRange == 'function') {
+  } else if (typeof this.file_ === 'object' &&
+             typeof this.file_.getColumnRange === 'function') {
     // must be a DataTable from gviz.
     this.rawData_ = this.parseDataTable_(this.file_);
     this.drawGraph_(this.rawData_);
-  } else if (typeof this.file_ == 'string') {
+  } else if (typeof this.file_ === 'string') {
     // Heuristic: a newline means it's CSV data. Otherwise it's an URL.
     if (this.file_.indexOf('\n') >= 0) {
       this.loadedEvent_(this.file_);
@@ -1750,8 +1758,8 @@ Dygraph.prototype.start_ = function() {
       var req = new XMLHttpRequest();
       var caller = this;
       req.onreadystatechange = function () {
-        if (req.readyState == 4) {
-          if (req.status == 200) {
+        if (req.readyState === 4) {
+          if (req.status === 200) {
             caller.loadedEvent_(req.responseText);
           }
         }
@@ -1786,11 +1794,11 @@ Dygraph.prototype.updateOptions = function(attrs) {
   }
   Dygraph.update(this.user_attrs_, attrs);
 
-  this.labelsFromCSV_ = (this.attr_("labels") == null);
+  this.labelsFromCSV_ = (this.attr_("labels") === null);
 
   // TODO(danvk): this doesn't match the constructor logic
   this.layout_.updateOptions({ 'errorBars': this.attr_("errorBars") });
-  if (attrs['file'] && attrs['file'] != this.file_) {
+  if (attrs['file'] && attrs['file'] !== this.file_) {
     this.file_ = attrs['file'];
     this.start_();
   } else {
