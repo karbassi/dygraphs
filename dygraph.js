@@ -816,7 +816,7 @@ Dygraph.prototype.mouseOut_ = function(event) {
 };
 
 Dygraph.zeropad = function(x) {
-  if (x < 10) return "0" + x; else return "" + x;
+  return x < 10 ? "0" + x : "" + x;
 }
 
 /**
