@@ -239,31 +239,35 @@ Dygraph.prototype.attr_ = function(name) {
 // TODO(danvk): any way I can get the line numbers to be this.warn call?
 Dygraph.prototype.log = function(severity, message) {
   if (typeof(console) !== 'undefined') {
+    var msg = 'dygraphs: ' + message;
     switch (severity) {
       case Dygraph.DEBUG:
-        console.debug('dygraphs: ' + message);
+        console.debug(msg);
         break;
       case Dygraph.INFO:
-        console.info('dygraphs: ' + message);
+        console.info(msg);
         break;
       case Dygraph.WARNING:
-        console.warn('dygraphs: ' + message);
+        console.warn(msg);
         break;
       case Dygraph.ERROR:
-        console.error('dygraphs: ' + message);
+        console.error(msg);
         break;
     }
   }
-}
+};
+
 Dygraph.prototype.info = function(message) {
   this.log(Dygraph.INFO, message);
-}
+};
+
 Dygraph.prototype.warn = function(message) {
   this.log(Dygraph.WARNING, message);
-}
+};
+
 Dygraph.prototype.error = function(message) {
   this.log(Dygraph.ERROR, message);
-}
+};
 
 /**
  * Returns the current rolling period, as set by the user or an option.
@@ -322,7 +326,7 @@ Dygraph.prototype.createInterface_ = function() {
   Dygraph.addEvent(this.hidden_, 'mouseout', function(e) {
     dygraph.mouseOut_(e);
   });
-}
+};
 
 /**
  * Creates the canvas containing the PlotKit graph. Only plotkit ever draws on
@@ -404,7 +408,7 @@ Dygraph.prototype.setColors_ = function() {
     }
   }
 
-  // TODO(danvk): update this w/r/t/ the new options system. 
+  // TODO(danvk): update this w/r/t/ the new options system.
   this.renderOptions_.colorScheme = this.colors_;
   Dygraph.update(this.plotter_.options, this.renderOptions_);
   Dygraph.update(this.layoutOptions_, this.user_attrs_);
@@ -425,7 +429,7 @@ Dygraph.findPosX = function(obj) {
   }
   return curleft;
 };
-                   
+
 Dygraph.findPosY = function(obj) {
   var curtop = 0;
   if (obj.offsetParent) {
