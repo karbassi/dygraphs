@@ -954,10 +954,13 @@ Dygraph.prototype.NumXTicks = function(start_time, end_time, granularity) {
   } else {
     var year_mod = 1;  // e.g. to only print one point every 10 years.
     var num_months = 12;
-    if (granularity == Dygraph.QUARTERLY) num_months = 3;
-    if (granularity == Dygraph.BIANNUAL) num_months = 2;
-    if (granularity == Dygraph.ANNUAL) num_months = 1;
-    if (granularity == Dygraph.DECADAL) { num_months = 1; year_mod = 10; }
+
+    switch(granularity){
+      case Dygraph.QUARTERLY: num_months = 3; break;
+      case Dygraph.BIANNUAL: num_months = 2; break;
+      case Dygraph.ANNUAL: num_months = 1; break;
+      case Dygraph.DECADAL: num_months = 1; year_mod = 10; break;
+    }
 
     var msInYear = 31557807360; // 365.2524 * 24 * 3600 * 1000
     var num_years = 1.0 * (end_time - start_time) / msInYear;
@@ -999,17 +1002,12 @@ Dygraph.prototype.GetXAxis = function(start_time, end_time, granularity) {
     var months;
     var year_mod = 1;  // e.g. to only print one point every 10 years.
 
-    if (granularity == Dygraph.MONTHLY) {
-      months = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ];
-    } else if (granularity == Dygraph.QUARTERLY) {
-      months = [ 0, 3, 6, 9 ];
-    } else if (granularity == Dygraph.BIANNUAL) {
-      months = [ 0, 6 ];
-    } else if (granularity == Dygraph.ANNUAL) {
-      months = [ 0 ];
-    } else if (granularity == Dygraph.DECADAL) {
-      months = [ 0 ];
-      year_mod = 10;
+    switch(granularity){
+      case Dygraph.MONTHLY: months = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]; break;
+      case Dygraph.QUARTERLY: months = [ 0, 3, 6, 9 ]; break;
+      case Dygraph.BIANNUAL: months = [ 0, 6 ]; break;
+      case Dygraph.ANNUAL: months = [ 0 ]; break;
+      case Dygraph.DECADAL: months = [ 0 ]; year_mod = 10; break;
     }
 
     var start_year = new Date(start_time).getFullYear();
