@@ -50,7 +50,7 @@
  * @param {Object} attrs Various other attributes, e.g. errorBars determines
  * whether the input data contains error ranges.
  */
-Dygraph = function(div, data, opts) {
+var Dygraph = function(div, data, opts) {
   if (arguments.length > 0) {
     if (arguments.length === 4) {
       // Old versions of dygraphs took in the series labels as a constructor
@@ -1846,4 +1846,4 @@ Dygraph.GVizChart.prototype.draw = function(data, options) {
 }
 
 // Older pages may still use this name.
-DateGraph = Dygraph;
+var DateGraph = Dygraph;
