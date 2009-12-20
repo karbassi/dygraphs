@@ -112,7 +112,8 @@ Dygraph.DEFAULT_ATTRS = {
   errorBars: false,
   fractions: false,
   wilsonInterval: true,  // only relevant if fractions is true
-  customBars: false
+  customBars: false,
+  fillGraph: false
 };
 
 // Various logging levels.
@@ -200,30 +201,6 @@ Dygraph.prototype.__init__ = function(div, file, attrs) {
   // Create the containing DIV and other interactive elements
   this.createInterface_();
 
-  // Create the PlotKit grapher
-  // TODO(danvk): why does the Layout need its own set of options?
-  this.layoutOptions_ = { 'xOriginIsZero': false };
-  Dygraph.update(this.layoutOptions_, this.attrs_);
-  Dygraph.update(this.layoutOptions_, this.user_attrs_);
-  Dygraph.update(this.layoutOptions_, {
-    'errorBars': (this.attr_("errorBars") || this.attr_("customBars")) });
-
-  this.layout_ = new DygraphLayout(this, this.layoutOptions_);
-
-  // TODO(danvk): why does the Renderer need its own set of options?
-  this.renderOptions_ = { colorScheme: this.colors_,
-                          strokeColor: null,
-                          axisLineWidth: Dygraph.AXIS_LINE_WIDTH };
-  Dygraph.update(this.renderOptions_, this.attrs_);
-  Dygraph.update(this.renderOptions_, this.user_attrs_);
-  this.plotter_ = new DygraphCanvasRenderer(this,
-                                            this.hidden_, this.layout_,
-                                            this.renderOptions_);
-
-  this.createStatusMessage_();
-  this.createRollInterface_();
-  this.createDragInterface_();
-
   this.start_();
 };
 
@@ -295,7 +272,7 @@ Dygraph.addEvent = function(el, evt, fn) {
 /**
  * Generates interface elements for the Dygraph: a containing div, a div to
  * display the current point, and a textbox to adjust the rolling average
- * period.
+ * period. Also creates the Renderer/Layout elements.
  * @private
  */
 Dygraph.prototype.createInterface_ = function() {
@@ -327,7 +304,35 @@ Dygraph.prototype.createInterface_ = function() {
   Dygraph.addEvent(this.hidden_, 'mouseout', function(e) {
     dygraph.mouseOut_(e);
   });
+<<<<<<< HEAD
 };
+=======
+
+  // Create the grapher
+  // TODO(danvk): why does the Layout need its own set of options?
+  this.layoutOptions_ = { 'xOriginIsZero': false };
+  Dygraph.update(this.layoutOptions_, this.attrs_);
+  Dygraph.update(this.layoutOptions_, this.user_attrs_);
+  Dygraph.update(this.layoutOptions_, {
+    'errorBars': (this.attr_("errorBars") || this.attr_("customBars")) });
+
+  this.layout_ = new DygraphLayout(this, this.layoutOptions_);
+
+  // TODO(danvk): why does the Renderer need its own set of options?
+  this.renderOptions_ = { colorScheme: this.colors_,
+                          strokeColor: null,
+                          axisLineWidth: Dygraph.AXIS_LINE_WIDTH };
+  Dygraph.update(this.renderOptions_, this.attrs_);
+  Dygraph.update(this.renderOptions_, this.user_attrs_);
+  this.plotter_ = new DygraphCanvasRenderer(this,
+                                            this.hidden_, this.layout_,
+                                            this.renderOptions_);
+
+  this.createStatusMessage_();
+  this.createRollInterface_();
+  this.createDragInterface_();
+}
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
 
 /**
  * Creates the canvas containing the PlotKit graph. Only plotkit ever draws on
@@ -539,12 +544,15 @@ Dygraph.prototype.createDragInterface_ = function() {
   var self = this;
 
   // Tracks whether the mouse is down right now
-  var mouseDown = false;
+  var isZooming = false;
+  var isPanning = false;
   var dragStartX = null;
   var dragStartY = null;
   var dragEndX = null;
   var dragEndY = null;
   var prevEndX = null;
+  var draggingDate = null;
+  var dateRange = null;
 
   // Utility function to convert page-wide coordinates to canvas coords
   var px = 0;
@@ -554,37 +562,63 @@ Dygraph.prototype.createDragInterface_ = function() {
 
   // Draw zoom rectangles when the mouse is down and the user moves around
   Dygraph.addEvent(this.hidden_, 'mousemove', function(event) {
-    if (mouseDown) {
+    if (isZooming) {
       dragEndX = getX(event);
       dragEndY = getY(event);
 
       self.drawZoomRect_(dragStartX, dragEndX, prevEndX);
       prevEndX = dragEndX;
+    } else if (isPanning) {
+      dragEndX = getX(event);
+      dragEndY = getY(event);
+
+      // Want to have it so that:
+      // 1. draggingDate appears at dragEndX
+      // 2. daterange = (dateWindow_[1] - dateWindow_[0]) is unaltered.
+
+      self.dateWindow_[0] = draggingDate - (dragEndX / self.width_) * dateRange;
+      self.dateWindow_[1] = self.dateWindow_[0] + dateRange;
+      self.drawGraph_(self.rawData_);
     }
   });
 
   // Track the beginning of drag events
   Dygraph.addEvent(this.hidden_, 'mousedown', function(event) {
-    mouseDown = true;
     px = Dygraph.findPosX(self.canvas_);
     py = Dygraph.findPosY(self.canvas_);
     dragStartX = getX(event);
     dragStartY = getY(event);
+
+    if (event.altKey || event.shiftKey) {
+      if (!self.dateWindow_) return;  // have to be zoomed in to pan.
+      isPanning = true;
+      dateRange = self.dateWindow_[1] - self.dateWindow_[0];
+      draggingDate = (dragStartX / self.width_) * dateRange +
+        self.dateWindow_[0];
+    } else {
+      isZooming = true;
+    }
   });
 
   // If the user releases the mouse button during a drag, but not over the
   // canvas, then it doesn't count as a zooming action.
   Dygraph.addEvent(document, 'mouseup', function(event) {
-    if (mouseDown) {
-      mouseDown = false;
+    if (isZooming || isPanning) {
+      isZooming = false;
       dragStartX = null;
       dragStartY = null;
+    }
+
+    if (isPanning) {
+      isPanning = false;
+      draggingDate = null;
+      dateRange = null;
     }
   });
 
   // Temporarily cancel the dragging event when the mouse leaves the graph
   Dygraph.addEvent(this.hidden_, 'mouseout', function(event) {
-    if (mouseDown) {
+    if (isZooming) {
       dragEndX = null;
       dragEndY = null;
     }
@@ -593,8 +627,8 @@ Dygraph.prototype.createDragInterface_ = function() {
   // If the mouse is released on the canvas during a drag event, then it's a
   // zoom. Only do the zoom if it's over a large enough area (>= 10 pixels)
   Dygraph.addEvent(this.hidden_, 'mouseup', function(event) {
-    if (mouseDown) {
-      mouseDown = false;
+    if (isZooming) {
+      isZooming = false;
       dragEndX = getX(event);
       dragEndY = getY(event);
       var regionWidth = Math.abs(dragEndX - dragStartX);
@@ -618,6 +652,12 @@ Dygraph.prototype.createDragInterface_ = function() {
 
       dragStartX = null;
       dragStartY = null;
+    }
+
+    if (isPanning) {
+      isPanning = false;
+      draggingDate = null;
+      dateRange = null;
     }
   });
 
@@ -914,23 +954,29 @@ Dygraph.prototype.addXTicks_ = function() {
 
 // Time granularity enumeration
 Dygraph.SECONDLY = 0;
-Dygraph.TEN_SECONDLY = 1;
-Dygraph.THIRTY_SECONDLY  = 2;
-Dygraph.MINUTELY = 3;
-Dygraph.TEN_MINUTELY = 4;
-Dygraph.THIRTY_MINUTELY = 5;
-Dygraph.HOURLY = 6;
-Dygraph.SIX_HOURLY = 7;
-Dygraph.DAILY = 8;
-Dygraph.WEEKLY = 9;
-Dygraph.MONTHLY = 10;
-Dygraph.QUARTERLY = 11;
-Dygraph.BIANNUAL = 12;
-Dygraph.ANNUAL = 13;
-Dygraph.DECADAL = 14;
-Dygraph.NUM_GRANULARITIES = 15;
+Dygraph.TWO_SECONDLY = 1;
+Dygraph.FIVE_SECONDLY = 2;
+Dygraph.TEN_SECONDLY = 3;
+Dygraph.THIRTY_SECONDLY  = 4;
+Dygraph.MINUTELY = 5;
+Dygraph.TWO_MINUTELY = 6;
+Dygraph.FIVE_MINUTELY = 7;
+Dygraph.TEN_MINUTELY = 8;
+Dygraph.THIRTY_MINUTELY = 9;
+Dygraph.HOURLY = 10;
+Dygraph.TWO_HOURLY = 11;
+Dygraph.SIX_HOURLY = 12;
+Dygraph.DAILY = 13;
+Dygraph.WEEKLY = 14;
+Dygraph.MONTHLY = 15;
+Dygraph.QUARTERLY = 16;
+Dygraph.BIANNUAL = 17;
+Dygraph.ANNUAL = 18;
+Dygraph.DECADAL = 19;
+Dygraph.NUM_GRANULARITIES = 20;
 
 Dygraph.SHORT_SPACINGS = [];
+<<<<<<< HEAD
 Dygraph.SHORT_SPACINGS[Dygraph.SECONDLY]        = 1E3; // 1000 * 1
 Dygraph.SHORT_SPACINGS[Dygraph.TEN_SECONDLY]    = 1E4; // 1000 * 10
 Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_SECONDLY] = 3E4; // 1000 * 30
@@ -941,6 +987,23 @@ Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 36E5; // 1000 * 60 * 30
 Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 216E5; // 1000 * 3600 * 6
 Dygraph.SHORT_SPACINGS[Dygraph.DAILY]           = 864E5; // 1000 * 86400
 Dygraph.SHORT_SPACINGS[Dygraph.WEEKLY]          = 6048E5; // 1000 * 604800
+=======
+Dygraph.SHORT_SPACINGS[Dygraph.SECONDLY]        = 1000 * 1;
+Dygraph.SHORT_SPACINGS[Dygraph.TWO_SECONDLY]    = 1000 * 2;
+Dygraph.SHORT_SPACINGS[Dygraph.FIVE_SECONDLY]   = 1000 * 5;
+Dygraph.SHORT_SPACINGS[Dygraph.TEN_SECONDLY]    = 1000 * 10;
+Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_SECONDLY] = 1000 * 30;
+Dygraph.SHORT_SPACINGS[Dygraph.MINUTELY]        = 1000 * 60;
+Dygraph.SHORT_SPACINGS[Dygraph.TWO_MINUTELY]    = 1000 * 60 * 2;
+Dygraph.SHORT_SPACINGS[Dygraph.FIVE_MINUTELY]   = 1000 * 60 * 5;
+Dygraph.SHORT_SPACINGS[Dygraph.TEN_MINUTELY]    = 1000 * 60 * 10;
+Dygraph.SHORT_SPACINGS[Dygraph.THIRTY_MINUTELY] = 1000 * 60 * 30;
+Dygraph.SHORT_SPACINGS[Dygraph.HOURLY]          = 1000 * 3600;
+Dygraph.SHORT_SPACINGS[Dygraph.TWO_HOURLY]      = 1000 * 3600 * 2;
+Dygraph.SHORT_SPACINGS[Dygraph.SIX_HOURLY]      = 1000 * 3600 * 6;
+Dygraph.SHORT_SPACINGS[Dygraph.DAILY]           = 1000 * 86400;
+Dygraph.SHORT_SPACINGS[Dygraph.WEEKLY]          = 1000 * 604800;
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
 
 // NumXTicks()
 //
@@ -981,11 +1044,37 @@ Dygraph.prototype.GetXAxis = function(start_time, end_time, granularity) {
   if (granularity < Dygraph.MONTHLY) {
     // Generate one tick mark for every fixed interval of time.
     var spacing = Dygraph.SHORT_SPACINGS[granularity];
-    var format = '%d%b';  // e.g. "1 Jan"
-    // TODO(danvk): be smarter about making sure this really hits a "nice" time.
-    if (granularity < Dygraph.HOURLY) {
-      start_time = spacing * Math.floor(0.5 + start_time / spacing);
+    var format = '%d%b';  // e.g. "1Jan"
+
+    // Find a time less than start_time which occurs on a "nice" time boundary
+    // for this granularity.
+    var g = spacing / 1000;
+    var d = new Date(start_time);
+    if (g <= 60) {  // seconds
+      var x = d.getSeconds(); d.setSeconds(x - x % g);
+    } else {
+      d.setSeconds(0);
+      g /= 60;
+      if (g <= 60) {  // minutes
+        var x = d.getMinutes(); d.setMinutes(x - x % g);
+      } else {
+        d.setMinutes(0);
+        g /= 60;
+
+        if (g <= 24) {  // days
+          var x = d.getHours(); d.setHours(x - x % g);
+        } else {
+          d.setHours(0);
+          g /= 24;
+
+          if (g == 7) {  // one week
+            d.setDate(d.getDate() - d.getDay());
+          }
+        }
+      }
     }
+    start_time = d.getTime();
+
     for (var t = start_time; t <= end_time; t += spacing) {
       var d = new Date(t);
       var frac = d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
@@ -1069,12 +1158,20 @@ Dygraph.numericTicks = function(minV, maxV, self) {
   // Try labels every 1, 2, 5, 10, 20, 50, 100, etc.
   // Calculate the resulting tick spacing (i.e. this.height_ / nTicks).
   // The first spacing greater than pixelsPerYLabel is what we use.
-  var mults = [1, 2, 5];
+  if (self.attr_("labelsKMG2")) {
+    var mults = [1, 2, 4, 8];
+  } else {
+    var mults = [1, 2, 5];
+  }
   var scale, low_val, high_val, nTicks;
   // TODO(danvk): make it possible to set this for x- and y-axes independently.
   var pixelsPerTick = self.attr_('pixelsPerYLabel');
   for (var i = -10; i < 50; i++) {
-    var base_scale = Math.pow(10, i);
+    if (self.attr_("labelsKMG2")) {
+      var base_scale = Math.pow(16, i);
+    } else {
+      var base_scale = Math.pow(10, i);
+    }
     for (var j = 0; j < mults.length; j++) {
       scale = base_scale * mults[j];
       low_val = Math.floor(minV / scale) * scale;
@@ -1093,9 +1190,23 @@ Dygraph.numericTicks = function(minV, maxV, self) {
 
   // Construct labels for the ticks
   var ticks = [];
+  var k;
+  var k_labels = [];
+  if (self.attr_("labelsKMB")) {
+    k = 1000;
+    k_labels = [ "K", "M", "B", "T" ];
+  }
+  if (self.attr_("labelsKMG2")) {
+    if (k) self.warn("Setting both labelsKMB and labelsKMG2. Pick one!");
+    k = 1024;
+    k_labels = [ "k", "M", "G", "T" ];
+  }
+
   for (var i = 0; i < nTicks; i++) {
     var tickV = low_val + i * scale;
+    var absTickV = Math.abs(tickV);
     var label = self.round_(tickV, 2);
+<<<<<<< HEAD
     if (self.attr_("labelsKMB")) {
       var k = 1E3;
       if (tickV >= k*k*k) {
@@ -1104,6 +1215,16 @@ Dygraph.numericTicks = function(minV, maxV, self) {
         label = self.round_(tickV/(k*k), 1) + "M";
       } else if (tickV >= k) {
         label = self.round_(tickV/k, 1) + "K";
+=======
+    if (k_labels.length) {
+      // Round up to an appropriate unit.
+      var n = k*k*k*k;
+      for (var j = 3; j >= 0; j--, n /= k) {
+        if (absTickV >= n) {
+          label = self.round_(tickV / n, 1) + k_labels[j];
+          break;
+        }
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
       }
     } else if (self.attr_("labelsKMG2")) {
       var k = 1024;
@@ -1167,10 +1288,15 @@ Dygraph.prototype.extremeValues_ = function(series) {
   } else {
     for (var j = 0; j < series.length; j++) {
       var y = series[j][1];
+<<<<<<< HEAD
       if (!y) {
         continue;
       }
       if (maxY === null || y > maxY) {
+=======
+      if (y === null || isNaN(y)) continue;
+      if (maxY == null || y > maxY) {
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
         maxY = y;
       }
       if (minY === null || y < minY) {
@@ -1274,11 +1400,12 @@ Dygraph.prototype.drawGraph_ = function(data) {
   this.addXTicks_();
 
   // Tell PlotKit to use this new data and render itself
+  this.layout_.updateOptions({dateWindow: this.dateWindow_});
   this.layout_.evaluateWithError();
   this.plotter_.clear();
   this.plotter_.render();
-  this.canvas_.getContext('2d').clearRect(0, 0,
-                                         this.canvas_.width, this.canvas_.height);
+  this.canvas_.getContext('2d').clearRect(0, 0, this.canvas_.width,
+                                         this.canvas_.height);
 };
 
 /**
@@ -1347,7 +1474,11 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
       var y = data[1];
       rollingData[i] = [originalData[i][0], [y, y - data[0], data[2] - y]];
 
+<<<<<<< HEAD
       if (y !== null && !isNaN(y)) {
+=======
+      if (y != null && !isNaN(y)) {
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
         low += data[0];
         mid += y;
         high += data[2];
@@ -1355,7 +1486,11 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
       }
       if (i - rollPeriod >= 0) {
         var prev = originalData[i - rollPeriod];
+<<<<<<< HEAD
         if (prev[1][1] !== null && !isNaN(prev[1][1])) {
+=======
+        if (prev[1][1] != null && !isNaN(prev[1][1])) {
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
           low -= prev[1][0];
           mid -= prev[1][1];
           high -= prev[1][2];
@@ -1380,9 +1515,13 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
         var num_ok = 0;
         for (var j = Math.max(0, i - rollPeriod + 1); j < i + 1; j++) {
           var y = originalData[j][1];
+<<<<<<< HEAD
           if (y === null || isNaN(y)) {
             continue;
           }
+=======
+          if (y == null || isNaN(y)) continue;
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
           num_ok++;
           sum += originalData[j][1];
         }
@@ -1400,9 +1539,13 @@ Dygraph.prototype.rollingAverage = function(originalData, rollPeriod) {
         var num_ok = 0;
         for (var j = Math.max(0, i - rollPeriod + 1); j < i + 1; j++) {
           var y = originalData[j][1][0];
+<<<<<<< HEAD
           if (y === null || isNaN(y)) {
             continue;
           }
+=======
+          if (y == null || isNaN(y)) continue;
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
           num_ok++;
           sum += originalData[j][1][0];
           variance += Math.pow(originalData[j][1][1], 2);
@@ -1650,9 +1793,13 @@ Dygraph.prototype.parseDataTable_ = function(data) {
   var labels = [];
   for (var i = 0; i < cols; i++) {
     labels.push(data.getColumnLabel(i));
+<<<<<<< HEAD
     if (i !== 0 && this.attr_("errorBars")) {
       i += 1;
     }
+=======
+    if (i != 0 && this.attr_("errorBars")) i += 1;
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
   }
   this.attrs_.labels = labels;
   cols = labels.length;
@@ -1675,10 +1822,21 @@ Dygraph.prototype.parseDataTable_ = function(data) {
   var ret = [];
   for (var i = 0; i < rows; i++) {
     var row = [];
+<<<<<<< HEAD
     if (!data.getValue(i, 0)) {
       continue;
     }
     if (indepType === 'date') {
+=======
+    if (typeof(data.getValue(i, 0)) === 'undefined' ||
+        data.getValue(i, 0) === null) {
+      this.warning("Ignoring row " + i +
+                   " of DataTable because of undefined or null first column.");
+      continue;
+    }
+
+    if (indepType == 'date') {
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
       row.push(data.getValue(i, 0).getTime());
     } else {
       row.push(data.getValue(i, 0));
@@ -1816,6 +1974,42 @@ Dygraph.prototype.updateOptions = function(attrs) {
   } else {
     this.drawGraph_(this.rawData_);
   }
+};
+
+/**
+ * Resizes the dygraph. If no parameters are specified, resizes to fill the
+ * containing div (which has presumably changed size since the dygraph was
+ * instantiated. If the width/height are specified, the div will be resized.
+ *
+ * This is far more efficient than destroying and re-instantiating a
+ * Dygraph, since it doesn't have to reparse the underlying data.
+ *
+ * @param {Number} width Width (in pixels)
+ * @param {Number} height Height (in pixels)
+ */
+Dygraph.prototype.resize = function(width, height) {
+  if ((width === null) != (height === null)) {
+    this.warn("Dygraph.resize() should be called with zero parameters or " +
+              "two non-NULL parameters. Pretending it was zero.");
+    width = height = null;
+  }
+
+  // TODO(danvk): there should be a clear() method.
+  this.maindiv_.innerHTML = "";
+  this.attrs_.labelsDiv = null;
+
+  if (width) {
+    this.maindiv_.style.width = width + "px";
+    this.maindiv_.style.height = height + "px";
+    this.width_ = width;
+    this.height_ = height;
+  } else {
+    this.width_ = this.maindiv_.offsetWidth;
+    this.height_ = this.maindiv_.offsetHeight;
+  }
+
+  this.createInterface_();
+  this.drawGraph_(this.rawData_);
 };
 
 /**

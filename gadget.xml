@@ -29,6 +29,10 @@
   <UserPref name="_dg_maxY" display_name="Max Y Value" required="false" default_value="" />
   <UserPref name="_dg_kmb" display_name="KMB labels" required="false" default_value="false" datatype="bool" />
   <UserPref name="_dg_errorbars" display_name="Error Bars" required="false" default_value="false" datatype="bool" />
+<<<<<<< HEAD
+=======
+  <UserPref name="_dg_fillGraph" display_name="Fill Chart" required="false" default_value="false" datatype="bool" />
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
   <!--
   This is a sample gadget, that uses the Google Visualization API to read data
   from a data source, and displays it as an html table.
@@ -44,7 +48,7 @@
 
   <script>
     var gadgetHelper = null;
-    var table = null; 
+    var table = null;
 
     _IG_RegisterOnloadHandler(loadVisualizationAPI);
 
@@ -95,11 +99,20 @@
       var rollPeriod = prefs.getInt("_dg_rollPeriod");
       var labelsKMB = prefs.getBool("_dg_kmb");
       var errorBars = prefs.getBool("_dg_errorbars");
+<<<<<<< HEAD
+=======
+      var fillGraph = prefs.getBool("_dg_fillGraph");
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
       var opts = {
         showRoller: showRoller,
         rollPeriod: rollPeriod,
         labelsKMB: labelsKMB,
+<<<<<<< HEAD
         errorBars: errorBars
+=======
+        errorBars: errorBars,
+        fillGraph: fillGraph
+>>>>>>> f3975624f80b8d821ae1ed6eed240d79bd1606da
       };
 
       var minY = prefs.getString("_dg_minY");

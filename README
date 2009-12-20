@@ -1,7 +1,9 @@
 dygraphs JavaScript charting library
 Copyright (c) 2006-, Dan Vanderkam.
-http://code.google.com/p/dygraphs/
-http://github.com/danvk/dygraphs
+
+Support: http://groups.google.com/group/dygraphs-users
+Source: http://github.com/danvk/dygraphs
+Issues: http://code.google.com/p/dygraphs/
 
 
 The dygraphs JavaScript library produces produces interactive, zoomable charts of time series.
@@ -27,7 +29,7 @@ Minimal Example
 <body>
 <div id="graphdiv"></div>
 <script type="text/javascript">
-  g = new DateGraph(
+  g = new Dygraph(
         document.getElementById("graphdiv"),  // containing div
         "Date,Temperature\n" +                // the data series
         "2008-05-07,75\n" +
@@ -43,9 +45,11 @@ dygraphs uses:
  - rgbcolor.js (Public Domain)
  - strftime.js (BSD License)
  - excanvas.js (Apache License)
+ - YUI compressor (BSD License)
 
 rgbcolor: http://www.phpied.com/rgb-color-parser-in-javascript/
 strftime: http://tech.bluesmoon.info/2008/04/strftime-in-javascript.html
 excanvas: http://code.google.com/p/explorercanvas/
+yui compressor: http://developer.yahoo.com/yui/compressor/
 
 dygraphs is available under the MIT license, included in LICENSE.txt.

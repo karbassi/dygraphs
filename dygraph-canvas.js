@@ -4,7 +4,7 @@
 /**
  * @fileoverview Based on PlotKit, but modified to meet the needs of dygraphs.
  * In particular, support for:
- * - grid overlays
+ * - grid overlays 
  * - error bars
  * - dygraphs attribute system
  */
@@ -37,23 +37,18 @@ DygraphLayout.prototype.evaluate = function() {
 
 DygraphLayout.prototype._evaluateLimits = function() {
   this.minxval = this.maxxval = null;
+  if (this.options.dateWindow) {
+    this.minxval = this.options.dateWindow[0];
+    this.maxxval = this.options.dateWindow[1];
+  } else {
+    for (var name in this.datasets) {
+      if (!this.datasets.hasOwnProperty(name)) continue;
+      var series = this.datasets[name];
+      var x1 = series[0][0];
+      if (!this.minxval || x1 < this.minxval) this.minxval = x1;
 
-  for (var name in this.datasets) {
-    if (!this.datasets.hasOwnProperty(name)) {
-      continue;
-    }
-
-    var series = this.datasets[name];
-    var x1 = series[0][0];
-
-    if (!this.minxval || x1 < this.minxval) {
-      this.minxval = x1;
-    }
-
-    var x2 = series[series.length - 1][0];
-
-    if (!this.maxxval || x2 > this.maxxval) {
-       this.maxxval = x2;
+      var x2 = series[series.length - 1][0];
+      if (!this.maxxval || x2 > this.maxxval) this.maxxval = x2;
     }
   }
 
@@ -70,10 +65,7 @@ DygraphLayout.prototype._evaluateLineCharts = function() {
   // add all the rects
   this.points = new Array();
   for (var setName in this.datasets) {
-
-    if (!this.datasets.hasOwnProperty(setName)) {
-       continue;
-    }
+    if (!this.datasets.hasOwnProperty(setName)) continue;
 
     var dataset = this.datasets[setName];
     for (var j = 0; j < dataset.length; j++) {
@@ -137,11 +129,8 @@ DygraphLayout.prototype.evaluateWithError = function() {
   // Copy over the error terms
   var i = 0; // index in this.points
   for (var setName in this.datasets) {
-
-    if (!this.datasets.hasOwnProperty(setName)) {
-       continue;
-    }
-
+    if (!this.datasets.hasOwnProperty(setName)) continue;
+    var j = 0;
     var dataset = this.datasets[setName];
     for (var j = 0; j < dataset.length; j++, i++) {
       var item = dataset[j];
@@ -370,7 +359,7 @@ DygraphCanvasRenderer.prototype._renderAxis = function() {
   context.lineWidth = this.options.axisLineWidth;
 
   if (this.options.drawYAxis) {
-    if (this.layout.yticks) {
+    if (this.layout.yticks && this.layout.yticks.length > 0) {
       for (var i = 0; i < this.layout.yticks.length; i++) {
         var tick = this.layout.yticks[i];
 
@@ -484,6 +473,7 @@ DygraphCanvasRenderer.prototype._renderLineChart = function() {
   var colorCount = this.options.colorScheme.length;
   var colorScheme = this.options.colorScheme;
   var errorBars = this.layout.options.errorBars;
+  var fillGraph = this.layout.options.fillGraph;
 
   var setNames = [];
   for (var name in this.layout.datasets) {
@@ -505,7 +495,11 @@ DygraphCanvasRenderer.prototype._renderLineChart = function() {
 
   var ctx = context;
   if (errorBars) {
-    for (i = 0; i < setCount; i++) {
+    if (fillGraph) {
+      this.dygraph_.warn("Can't use fillGraph option with error bars");
+    }
+
+    for (var i = 0; i < setCount; i++) {
       var setName = setNames[i];
       var color = colorScheme[i % colorCount];
 
@@ -526,13 +520,61 @@ DygraphCanvasRenderer.prototype._renderLineChart = function() {
       for (var j = 0; j < this.layout.points.length; j++) {
         point = this.layout.points[j];
         count++;
-        if (point.name === setName) {
-          if (!point.y || isNaN(point.y)) {
+        if (point.name == setName) {
+          if (!isOK(point.y)) {
             prevX = -1;
             continue;
           }
           var newYs = [ point.y - point.errorPlus * yscale,
                         point.y + point.errorMinus * yscale ];
+          newYs[0] = this.area.h * newYs[0] + this.area.y;
+          newYs[1] = this.area.h * newYs[1] + this.area.y;
+          if (prevX >= 0) {
+            ctx.moveTo(prevX, prevYs[0]);
+            ctx.lineTo(point.canvasx, newYs[0]);
+            ctx.lineTo(point.canvasx, newYs[1]);
+            ctx.lineTo(prevX, prevYs[1]);
+            ctx.closePath();
+          }
+          prevYs[0] = newYs[0];
+          prevYs[1] = newYs[1];
+          prevX = point.canvasx;
+        }
+      }
+      ctx.fill();
+    }
+  } else if (fillGraph) {
+    for (var i = 0; i < setCount; i++) {
+      var setName = setNames[i];
+      var setNameLast;
+      if (i>0) setNameLast = setNames[i-1];
+      var color = colorScheme[i % colorCount];
+
+      // setup graphics context
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = this.options.strokeWidth;
+      var prevX = -1;
+      var prevYs = [-1, -1];
+      var count = 0;
+      var yscale = this.layout.yscale;
+      // should be same color as the lines but only 15% opaque.
+      var rgb = new RGBColor(color);
+      var err_color = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.15)';
+      ctx.fillStyle = err_color;
+      ctx.beginPath();
+      for (var j = 0; j < this.layout.points.length; j++) {
+        var point = this.layout.points[j];
+        count++;
+        if (point.name == setName) {
+          if (!isOK(point.y)) {
+            prevX = -1;
+            continue;
+          }
+          var pX = 1.0 + this.layout.minyval * this.layout.yscale;
+          if (pX < 0.0) pX = 0.0;
+          else if (pX > 1.0) pX = 1.0;
+          var newYs = [ point.y, pX ];
           newYs[0] = this.area.h * newYs[0] + this.area.y;
           newYs[1] = this.area.h * newYs[1] + this.area.y;
           if (prevX >= 0) {
